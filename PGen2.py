@@ -94,7 +94,7 @@ def identify_topics(preprocessed_text):
     return topics
 
 def format_question_paper(questions):
-    paper = "Model Question Paper\n\n"
+    paper = "CognitaAI - Model Question Paper\n\n"
     for i, question in enumerate(questions, 1):
         wrapped_question = textwrap.fill(question, width=80, subsequent_indent='    ')
         paper += f"{i}. {wrapped_question}\n\n"
@@ -159,7 +159,7 @@ def generate_questions(context, num_questions):
     generated_questions = []
     for i in range(num_questions):
         start_idx = i * 100 % len(context)
-        prompt = f"Generate a question based on the following context: {context[start_idx:start_idx+200]}\n\nQuestion:"
+        prompt = f"Generate a new question similar to the following question. Generated question should be similar in length as the question: {context[start_idx:start_idx+200]}\n\nQuestion:"
         
         response = requests.post('http://localhost:11434/api/generate', 
                                  json={
