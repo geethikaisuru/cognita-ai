@@ -9,7 +9,7 @@ const execAsync = promisify(exec);
 
 export async function POST(request: Request) {
   try {
-    const { files } = await request.json();
+    const { files, modelChoice } = await request.json();
     const uploadDir = path.join(process.cwd(), 'uploads');
 
     if (!fs.existsSync(uploadDir)) {
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     }
 
     const pythonScript = path.join(process.cwd(), 'PGen2.py');
-    const command = `python "${pythonScript}" ${filePaths.map(f => `"${f}"`).join(' ')}`;
+    const command = `python "${pythonScript}" ${filePaths.map(f => `"${f}"`).join(' ')} "${modelChoice}"`;
 
     const { stdout, stderr } = await execAsync(command);
 

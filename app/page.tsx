@@ -7,7 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { useTheme } from "next-themes"
 import { MoonIcon, SunIcon } from "@radix-ui/react-icons"
-import { BrainCircuit, ExternalLink } from 'lucide-react'
+import { BrainCircuit, ExternalLink, ChevronDown } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 export default function Home() {
   const [files, setFiles] = useState<File[]>([])
@@ -16,6 +22,7 @@ export default function Home() {
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null)
   const [progress, setProgress] = useState(0)
   const { setTheme, theme } = useTheme()
+  const [modelChoice, setModelChoice] = useState<string>("Ollama Phi 3")
 
   useEffect(() => {
     if (isGenerating) {
@@ -62,7 +69,10 @@ export default function Home() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ files: base64Files.map(f => f.split(',')[1]) }),
+        body: JSON.stringify({ 
+          files: base64Files.map(f => f.split(',')[1]),
+          modelChoice: modelChoice
+        }),
       })
 
       if (!response.ok) {
@@ -94,15 +104,28 @@ export default function Home() {
   return (
     <main className="container mx-auto p-4 relative min-h-screen">
       <div className="absolute top-4 right-4 flex items-center space-x-3">
-        <Button
-          variant="outline"
-          size="icon"
-          className="flex items-center space-x-2 w-full mx pl-2 pr-2"
-          onClick={() => {}}
-        >
-          <BrainCircuit className="h-4 w-4" />
-          <span className="text-xs">Ollama Phi 3</span>
-        </Button>
+      <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              className="flex items-center space-x-2 w-full mx pl-2 pr-2"
+              disabled={isGenerating}
+            >
+              <BrainCircuit className="h-4 w-4" />
+              <span className="text-xs">{modelChoice}</span>
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => setModelChoice("Ollama Phi 3")}>
+              Ollama Phi 3
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setModelChoice("MiniCPM H.F.")}>
+              MiniCPM H.F.
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <Button
           variant="outline"
           size="icon"

@@ -27,6 +27,79 @@ print("Successfully imported all libraries")
 nltk.download('punkt')
 nltk.download('stopwords')
 
+
+# Function to measure question length
+def measure_question_length(question):
+    return len(word_tokenize(question))
+
+# MiniCPM model initialization
+def initialize_minicpm():
+    local_model_path = "E:/Dev/DevTools/Huggingface/models/openbmb_MiniCPM-Llama3-V-2_5"
+    model = AutoModelForCausalLM.from_pretrained(local_model_path, trust_remote_code=True, torch_dtype=torch.float16)
+    model = model.to(device='cuda')
+    tokenizer = AutoTokenizer.from_pretrained(local_model_path, trust_remote_code=True)
+    model.eval()
+    return model, tokenizer
+
+# MiniCPM question generation function
+def generate_questions_minicpm(context, num_questions, model, tokenizer, avg_question_length):
+    generated_questions = []
+    for _ in range(num_questions):
+        prompt = f"""Generate a question based on this context: {context[:500]}
+        The generated question should be approximately {avg_question_length} words long.
+        Ensure the question is relevant to the context and matches the style of a typical exam question."""
+
+        inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+        
+        with torch.no_grad():
+            outputs = model.generate(
+                **inputs,
+                max_new_tokens=100,
+                do_sample=True,
+                temperature=0.7,
+                top_k=50,
+                top_p=0.95,
+            )
+        
+        generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
+        question = generated_text.split("Generate a question based on this context:")[-1].strip()
+        generated_questions.append(question)
+    
+    return generated_questions
+
+# Ollama Phi 3 question generation function
+def generate_questions_ollama(context, num_questions, analyzed_questions, avg_question_length):
+    generated_questions = []
+    for i in range(num_questions):
+        prompt = f"""Generate a new exam question based on the following context and guidelines:
+
+Context: {context[:500]}  # Limit context to 500 characters
+
+Guidelines:
+1. The question should be similar in style and complexity to this example: {random.choice(analyzed_questions)['text']}
+2. Ensure the question ends with a question mark.
+3. The question should be thought-provoking and require critical thinking.
+4. Avoid yes/no questions.
+5. The question should be relevant to the given context.
+6. The generated question should be approximately {avg_question_length} words long.
+
+Generated Question:"""
+
+        response = requests.post('http://localhost:11434/api/generate', 
+                                 json={
+                                     "model": "phi3:mini",
+                                     "prompt": prompt,
+                                     "stream": False
+                                 })
+        
+        if response.status_code == 200:
+            question = response.json()['response'].strip()
+            generated_questions.append(question)
+        else:
+            print(f"Error generating question: {response.status_code}")
+    
+    return generated_questions
+
 def extract_text_from_pdfs(pdf_files):
     text = ""
     for pdf_file in pdf_files:
@@ -93,39 +166,18 @@ def identify_topics(preprocessed_text):
     topics = lda_model.print_topics()
     return [topic for _, topic in topics]  # Return only the topic strings, not the topic numbers
 
-
-def generate_questions(context, num_questions, analyzed_questions):
-    generated_questions = []
-    for i in range(num_questions):
-        # Create a more specific prompt
-        prompt = f"""Generate a new exam question based on the following context and guidelines:
-
-Context: {context[:500]}  # Limit context to 500 characters
-
-Guidelines:
-1. The question should be similar in style and complexity to this example: {random.choice(analyzed_questions)['text']}
-2. Ensure the question ends with a question mark.
-3. The question should be thought-provoking and require critical thinking.
-4. Avoid yes/no questions.
-5. The question should be relevant to the given context.
-
-Generated Question:"""
-
-        response = requests.post('http://localhost:11434/api/generate', 
-                                 json={
-                                     "model": "phi3:mini",
-                                     "prompt": prompt,
-                                     "stream": False
-                                 })
-        
-        if response.status_code == 200:
-            question = response.json()['response'].strip()
-            generated_questions.append(question)
-        else:
-            print(f"Error generating question: {response.status_code}")
+def generate_questions(context, num_questions, analyzed_questions, model_choice):
+    # Calculate average question length from analyzed questions
+    avg_question_length = sum(measure_question_length(q['text']) for q in analyzed_questions) // len(analyzed_questions)
     
-    print(f"Generated {len(generated_questions)} questions")
-    return generated_questions
+    if model_choice == 'Ollama Phi 3':
+        return generate_questions_ollama(context, num_questions, analyzed_questions, avg_question_length)
+    elif model_choice == 'MiniCPM H.F.':
+        model, tokenizer = initialize_minicpm()
+        return generate_questions_minicpm(context, num_questions, model, tokenizer, avg_question_length)
+    else:
+        raise ValueError("Invalid model choice")
+
 
 def filter_and_rank_questions(generated_questions, analyzed_questions, topics):
     filtered_questions = []
@@ -220,7 +272,7 @@ def save_as_pdf(text, filename):
 
 print("Completed functions compiling")
 
-def main(pdf_files):
+def main(pdf_files, model_choice):
     print("Received file paths:", pdf_files)
     for file in pdf_files:
         if not os.path.exists(file):
@@ -249,8 +301,8 @@ def main(pdf_files):
     topics = identify_topics(preprocessed_text)
     print(f"Identified {len(topics)} topics")
     
-    print("Generating questions...")
-    generated_questions = generate_questions(' '.join(preprocessed_text), num_questions=len(analyzed_questions) * 2, analyzed_questions=analyzed_questions)
+    print(f"Generating questions using {model_choice}...")
+    generated_questions = generate_questions(' '.join(preprocessed_text), num_questions=len(analyzed_questions) * 2, analyzed_questions=analyzed_questions, model_choice=model_choice)
     
     print("Filtering and ranking questions...")
     final_questions = filter_and_rank_questions(generated_questions, analyzed_questions, topics)
@@ -264,8 +316,9 @@ def main(pdf_files):
     return final_paper
 
 if __name__ == "__main__":
-    pdf_files = sys.argv[1:]
-    model_paper = main(pdf_files)
+    pdf_files = sys.argv[1:-1]  # All arguments except the last one are PDF files
+    model_choice = sys.argv[-1]  # The last argument is the model choice
+    model_paper = main(pdf_files, model_choice)
     print("Model paper generation complete. Output saved as 'improved_model_paper.pdf'.")
     print("\nGenerated Model Paper:")
     print(model_paper)
