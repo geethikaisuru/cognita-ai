@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Cognita.ai 🧠📄
 
-## Getting Started
+![App Screenshot](./public/screenshot.jpg)
 
-First, run the development server:
+Cognita.ai is a web application that generates model question papers from your past exam PDFs using advanced AI models. Upload your PDF files, select your preferred AI model (Ollama Phi 3 or MiniCPM H.F.), and instantly receive a new, high-quality model paper tailored to your content. The app features a modern, responsive UI built with Next.js, React, and TailwindCSS.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## ✨ Features
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **AI-Powered Question Generation:** Utilizes state-of-the-art language models to analyze your uploaded PDFs and generate relevant exam questions.
+- **Multiple Model Support:** Choose between Ollama Phi 3 and MiniCPM H.F. for question generation.
+- **User-Friendly Interface:** Simple drag-and-drop PDF upload, progress tracking, and instant download of generated papers.
+- **PDF Processing:** Extracts and preprocesses text from your PDFs for optimal question generation.
+- **Customizable Output:** Ensures topic coverage and question diversity in the generated model paper.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🚀 Getting Started
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+1. Clone the repository.
+2. Install dependencies: `npm install`
+3. Start the development server: `npm run dev`
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Learn More
+## 🛠️ Tech Stack
 
-To learn more about Next.js, take a look at the following resources:
+- Next.js 14
+- React 18
+- TailwindCSS
+- Python (for backend PDF and NLP processing)
+- HuggingFace Transformers (for local model inference)
+- NLTK, spaCy, Gensim (for NLP tasks)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🤝 Contributing
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+Pull requests and issues are welcome! Please see the [Next.js documentation](https://nextjs.org/docs) for more info on the framework.
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Note:**  
+- This project is for educational and research purposes.  
+- For any issues or feature requests, please open an issue or contact the maintainer.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+---
+
+👨‍💻 **About the Creator**
+Hi! I'm Geethika Isuru, an AI Engineer & Entrepreneur who's trying to make a better world with AI.
+
+💼 [LinkedIn Profile](https://www.linkedin.com/in/geethikaisuru/)
+
+📂 [GitHub Profile](https://github.com/geethikaisuru)
+
+🛜 [Website](https://geethikaisuru.me/)
